@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Sudut Pusat</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      background: transparent !important;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: transparent !important;
+    }
+  </style>
+</head>
+<body>
+
+<script>
+let pusat;
+let r; // 🔹 RADIUS DISAMAKAN DENGAN DIAMETER
+let A, B;
+let dragged = null;
+
+function setup() {
+  createCanvas(1200, 700); // 🔹 CANVAS SAMA
+  pusat = createVector(width/2, height/2);
+
+  r = min(width, height) * 0.285; // 🔹 SAMA PERSIS DENGAN DIAMETER
+
+  A = createVector(pusat.x + r * cos(PI/4), pusat.y + r * sin(PI/4));
+  B = createVector(pusat.x + r * cos(3*PI/2), pusat.y + r * sin(3*PI/2));
+}
+
+function draw() {
+  clear();
+
+  // Lingkaran
+  noFill();
+  stroke(0, 0, 255); // 🔹 WARNA BIRU UNTUK LINGKARAN
+  strokeWeight(2);
+  ellipse(pusat.x, pusat.y, 2*r, 2*r);
+
+  // Sudut A & B
+  let aA = atan2(A.y - pusat.y, A.x - pusat.x);
+  let aB = atan2(B.y - pusat.y, B.x - pusat.x);
+
+  let startAngle, endAngle;
+  let diff = abs(aA - aB);
+
+  if (diff > PI) {
+    startAngle = max(aA, aB);
+    endAngle = min(aA, aB) + TWO_PI;
+  } else {
+    startAngle = min(aA, aB);
+    endAngle = max(aA, aB);
+  }
+
+  let angleAOB = abs(endAngle - startAngle);
+  if (angleAOB > PI) angleAOB = TWO_PI - angleAOB;
+
+  let angleAOB_deg = degrees(angleAOB);
+
+  // Busur AB
+  noFill();
+  stroke(255,0,0);
+  strokeWeight(4);
+  arc(pusat.x, pusat.y, 2*r, 2*r, startAngle, endAngle);
+
+  // Sudut pusat
+  stroke(0,0,150);
+  strokeWeight(2);
+  line(pusat.x, pusat.y, A.x, A.y);
+  line(pusat.x, pusat.y, B.x, B.y);
+
+  noFill();
+  arc(pusat.x, pusat.y, 60, 60, startAngle, endAngle);
+
+  // Angka sudut pusat
+  fill(0,0,150);
+  textSize(18);
+  textAlign(CENTER, CENTER);
+  let midA = (startAngle + endAngle)/2;
+  text(
+    nf(angleAOB_deg,0,1)+"°",
+    pusat.x + 75*cos(midA),
+    pusat.y + 75*sin(midA)
+  );
+
+  // Titik-titik
+  noStroke();
+  fill(255,0,0);
+  ellipse(pusat.x, pusat.y, 10);
+
+  fill(0,100,255);
+  ellipse(A.x, A.y, 12);
+  ellipse(B.x, B.y, 12);
+
+  // Label
+  fill(0);
+  textSize(14);
+  text("O", pusat.x, pusat.y - 12);
+  text("A", A.x + 12, A.y);
+  text("B", B.x + 12, B.y);
+}
+
+function mousePressed() {
+  if (dist(mouseX, mouseY, A.x, A.y) < 12) dragged = A;
+  else if (dist(mouseX, mouseY, B.x, B.y) < 12) dragged = B;
+}
+
+function mouseDragged() {
+  if (dragged) {
+    let v = createVector(mouseX - pusat.x, mouseY - pusat.y);
+    v.normalize().mult(r);
+    dragged.x = pusat.x + v.x;
+    dragged.y = pusat.y + v.y;
+  }
+}
+
+function mouseReleased() {
+  dragged = null;
+}
+</script>
+
+</body>
+</html>
