@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Apotema Lingkaran</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <style>
+    body { margin: 0; }
+    canvas { display: block; }
+  </style>
+</head>
+<body>
+
+<script>
+let pusat;
+let r = 180;
+let ujung1, ujung2;
+
+let dragging = false;
+let draggedPoint = null;
+let draggingLine = false;
+let draggingApotema = false;
+
+function setup() {
+  createCanvas(600, 600);
+  pusat = createVector(width/2, height/2);
+
+  ujung1 = createVector(pusat.x + r, pusat.y);
+  ujung2 = createVector(pusat.x - r, pusat.y);
+}
+
+function draw() {
+  clear(); // 🔹 transparan
+
+  // bayangan lingkaran
+  noFill();
+  stroke(0, 150, 255, 120);
+  strokeWeight(2);
+  ellipse(pusat.x, pusat.y, 2*r, 2*r);
+
+  // hitung vektor chord
+  let dx = ujung2.x - ujung1.x;
+  let dy = ujung2.y - ujung1.y;
+  let len = sqrt(dx*dx + dy*dy);
+  if (len < 0.001) len = 0.001;
+
+  dx /= len; dy /= len;
+  let perpX = -dy;
+  let perpY = dx;
+
+  // titik kaki apotema
+  let ip = lineIntersection(
+    pusat.x, pusat.y,
+    pusat.x + perpX, pusat.y + perpY,
+    ujung1.x, ujung1.y,
+    ujung2.x, ujung2.y
+  );
+
+  // tali busur
+  stroke(80);
+  strokeWeight(3);
+  line(ujung1.x, ujung1.y, ujung2.x, ujung2.y);
+
+  // apotema
+  stroke(255, 0, 255);
+  strokeWeight(3);
+  line(pusat.x, pusat.y, ip.x, ip.y);
+
+  // titik pusat
+  noStroke();
+  fill(255, 0, 0);
+  ellipse(pusat.x, pusat.y, 10, 10);
+
+  // titik ujung chord
+  fill(0, 100, 255);
+  ellipse(ujung1.x, ujung1.y, 12, 12);
+  ellipse(ujung2.x, ujung2.y, 12, 12);
+
+  // titik apotema
+  fill(255, 0, 255);
+  ellipse(ip.x, ip.y, 8, 8);
+
+  // Label untuk titik-titik
+  fill(0); // Warna hitam untuk teks
+  textSize(16);
+  textAlign(LEFT, CENTER);
+  
+  // Label O untuk pusat
+  text("O", pusat.x + 15, pusat.y - 15);
+  
+  // Label A untuk ujung1
+  text("A", ujung1.x + 15, ujung1.y - 15);
+  
+  // Label B untuk ujung2
+  text("B", ujung2.x + 15, ujung2.y - 15);
+  
+  // Label T untuk ujung apotema
+  text("T", ip.x + 15, ip.y - 15);
+}
+
+// ================== INTERAKSI ==================
+
+function mousePressed() {
+  if (dist(mouseX, mouseY, ujung1.x, ujung1.y) < 10) {
+    dragging = true; draggedPoint = 1;
+  } else if (dist(mouseX, mouseY, ujung2.x, ujung2.y) < 10) {
+    dragging = true; draggedPoint = 2;
+  } else if (pointToLineDist(mouseX, mouseY, ujung1.x, ujung1.y, ujung2.x, ujung2.y) < 10) {
+    draggingLine = true;
+  } else {
+    let ip = getApotemaPoint();
+    if (dist(mouseX, mouseY, ip.x, ip.y) < 10) {
+      draggingApotema = true;
+    }
+  }
+}
+
+function mouseDragged() {
+  if (dragging) {
+    let v = createVector(mouseX - pusat.x, mouseY - pusat.y).normalize().mult(r);
+    if (draggedPoint === 1) ujung1.set(pusat.x + v.x, pusat.y + v.y);
+    if (draggedPoint === 2) ujung2.set(pusat.x + v.x, pusat.y + v.y);
+  } 
+  else if (draggingLine || draggingApotema) {
+    let dx = mouseX - pmouseX;
+    let dy = mouseY - pmouseY;
+    ujung1.add(dx, dy);
+    ujung2.add(dx, dy);
+    projectToCircle(ujung1);
+    projectToCircle(ujung2);
+  }
+}
+
+function mouseReleased() {
+  dragging = false;
+  draggedPoint = null;
+  draggingLine = false;
+  draggingApotema = false;
+}
+
+// ================== UTIL ==================
+
+function projectToCircle(v) {
+  let d = createVector(v.x - pusat.x, v.y - pusat.y).normalize().mult(r);
+  v.set(pusat.x + d.x, pusat.y + d.y);
+}
+
+function getApotemaPoint() {
+  let dx = ujung2.x - ujung1.x;
+  let dy = ujung2.y - ujung1.y;
+  let len = sqrt(dx*dx + dy*dy);
+  dx /= len; dy /= len;
+  return lineIntersection(
+    pusat.x, pusat.y,
+    pusat.x - dy, pusat.y + dx,
+    ujung1.x, ujung1.y,
+    ujung2.x, ujung2.y
+  );
+}
+
+function pointToLineDist(px, py, x1, y1, x2, y2) {
+  let A = px - x1, B = py - y1;
+  let C = x2 - x1, D = y2 - y1;
+  let dot = A*C + B*D;
+  let lenSq = C*C + D*D;
+  let t = constrain(dot / lenSq, 0, 1);
+  let xx = x1 + t*C;
+  let yy = y1 + t*D;
+  return dist(px, py, xx, yy);
+}
+
+function lineIntersection(x1,y1,x2,y2,x3,y3,x4,y4) {
+  let d = (x1-x2)*(y3-y4)-(y1-y2)*(x3-x4);
+  if (abs(d) < 1e-6) return createVector((x3+x4)/2,(y3+y4)/2);
+  let px = ((x1*y2-y1*x2)*(x3-x4)-(x1-x2)*(x3*y4-y3*x4))/d;
+  let py = ((x1*y2-y1*x2)*(y3-y4)-(y1-y2)*(x3*y4-y3*x4))/d;
+  return createVector(px,py);
+}
+</script>
+
+</body>
+</html>
