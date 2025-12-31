@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tembereng Lingkaran</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: transparent;
+    }
+  </style>
+</head>
+<body>
+
+<script>
+// ======================
+// Variabel utama
+// ======================
+let pusat;
+let r;
+let ujung1, ujung2;
+let dragging = false;
+let draggedPoint = null;
+
+function setup() {
+  createCanvas(1200, 700);                 // ⬅️ ukuran canvas disamakan
+  pusat = createVector(width/2, height/2);
+
+  r = min(width, height) * 0.285;          // ⬅️ radius disamakan
+
+  // titik awal pada lingkaran
+  ujung1 = createVector(pusat.x + r, pusat.y);
+  ujung2 = createVector(pusat.x - r, pusat.y);
+}
+
+function draw() {
+  clear();
+
+  // ======================
+  // Bayangan lingkaran
+  // ======================
+  noFill();
+  stroke(0, 150, 255, 80);
+  strokeWeight(2);
+  ellipse(pusat.x, pusat.y, 2*r, 2*r);
+
+  // ======================
+  // Hitung sudut tembereng
+  // ======================
+  let a1 = atan2(ujung1.y - pusat.y, ujung1.x - pusat.x);
+  let a2 = atan2(ujung2.y - pusat.y, ujung2.x - pusat.x);
+
+  a1 = (a1 + TWO_PI) % TWO_PI;
+  a2 = (a2 + TWO_PI) % TWO_PI;
+
+  let angles = [a1, a2];
+  angles.sort((a, b) => a - b);
+  let diff = angles[1] - angles[0];
+
+  let start, end;
+  if (diff <= PI) {
+    start = angles[0];
+    end = angles[1];
+  } else {
+    start = angles[1];
+    end = angles[0] + TWO_PI;
+  }
+
+  let x1 = pusat.x + r * cos(start);
+  let y1 = pusat.y + r * sin(start);
+  let x2 = pusat.x + r * cos(end);
+  let y2 = pusat.y + r * sin(end);
+
+  // ======================
+  // Area tembereng
+  // ======================
+  noStroke();
+  fill(0, 200, 0, 120);
+  beginShape();
+  vertex(x1, y1);
+  for (let t = start; t <= end + 0.001; t += 0.01) {
+    vertex(pusat.x + r * cos(t), pusat.y + r * sin(t));
+  }
+  vertex(x2, y2);
+  endShape(CLOSE);
+
+  // ======================
+  // Tali busur
+  // ======================
+  stroke(80);
+  strokeWeight(2);
+  line(x1, y1, x2, y2);
+
+  // ======================
+  // Busur
+  // ======================
+  noFill();
+  stroke(255, 0, 0);
+  strokeWeight(4);
+  arc(pusat.x, pusat.y, 2*r, 2*r, start, end);
+
+  // ======================
+  // Titik pusat O
+  // ======================
+  noStroke();
+  fill(255, 0, 0);
+  ellipse(pusat.x, pusat.y, 8, 8);
+  fill(0);
+  textSize(16);
+  text('O', pusat.x + 15, pusat.y);
+
+  // ======================
+  // Titik A dan B
+  // ======================
+  fill(0, 100, 255);
+  ellipse(x1, y1, 12, 12);
+  ellipse(x2, y2, 12, 12);
+
+  fill(0);
+  text('A', x1 + 15, y1);
+  text('B', x2 + 15, y2);
+}
+
+// ======================
+// Interaksi mouse
+// ======================
+function mousePressed() {
+  if (dist(mouseX, mouseY, ujung1.x, ujung1.y) < 12) {
+    dragging = true; draggedPoint = 1;
+  } else if (dist(mouseX, mouseY, ujung2.x, ujung2.y) < 12) {
+    dragging = true; draggedPoint = 2;
+  }
+}
+
+function mouseDragged() {
+  if (dragging) {
+    let v = createVector(mouseX - pusat.x, mouseY - pusat.y);
+    if (v.mag() < 1) v.set(1,0);
+    v.normalize().mult(r);
+
+    if (draggedPoint === 1) {
+      ujung1.set(pusat.x + v.x, pusat.y + v.y);
+    } else if (draggedPoint === 2) {
+      ujung2.set(pusat.x + v.x, pusat.y + v.y);
+    }
+  }
+}
+
+function mouseReleased() {
+  dragging = false;
+  draggedPoint = null;
+}
+</script>
+
+</body>
+</html>
