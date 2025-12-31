@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Lingkaran dengan Trail Bergerak</title>
+    <style>
+        html, body {
+            margin: 0;
+            background: transparent;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="myCanvas" width="1200" height="700"></canvas>
+
+<script>
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+
+// ======================
+// UKURAN DISAMAKAN DENGAN YANG LAIN
+// ======================
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radius = Math.min(canvas.width, canvas.height) * 0.285;
+
+// Variabel animasi
+let angle = 0;
+const speed = 0.02;
+
+// Trail
+let trail = [];
+let currentColor = 'red';
+
+function draw() {
+    // Transparan penuh
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Keliling lingkaran
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Titik bergerak
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+
+    // Simpan trail
+    trail.push({ x, y, color: currentColor });
+
+    // Gambar trail
+    trail.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, 2 * Math.PI);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+    });
+
+    // Titik utama
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+
+    angle += speed;
+
+    // Satu putaran penuh
+    if (angle >= 2 * Math.PI) {
+        trail.forEach(p => p.color = 'blue');
+        angle = 0;
+    }
+
+    requestAnimationFrame(draw);
+}
+
+// Mulai animasi
+draw();
+</script>
+
+</body>
+</html>
