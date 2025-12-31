@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Busur Lingkaran Transparan</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      background: transparent !important;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: transparent !important;
+    }
+  </style>
+</head>
+
+<body>
+
+<script>
+let pusat;
+let r;
+
+let ujung1, ujung2;
+let dragging = false;
+let draggedPoint = null;
+
+// ======================
+// setup
+// ======================
+function setup() {
+  createCanvas(1200, 700);
+
+  // ⬅️ UKURAN DISAMAKAN DENGAN CODING DIAMETER
+  r = min(width, height) * 0.285;
+
+  pusat = createVector(width / 2, height / 2);
+
+  ujung1 = createVector(pusat.x + r, pusat.y);
+  ujung2 = createVector(pusat.x - r, pusat.y);
+}
+
+// ======================
+// draw
+// ======================
+function draw() {
+  clear();
+
+  // bayangan lingkaran
+  noFill();
+  stroke(0,150,255,120);
+  strokeWeight(2);
+  ellipse(pusat.x, pusat.y, 2*r, 2*r);
+
+  // sudut busur (minor arc)
+  let a1 = atan2(ujung1.y - pusat.y, ujung1.x - pusat.x);
+  let a2 = atan2(ujung2.y - pusat.y, ujung2.x - pusat.x);
+  let delta = a2 - a1;
+  if (delta < 0) delta += TWO_PI;
+  if (delta > PI) {
+    let tmp = a1;
+    a1 = a2;
+    a2 = tmp + TWO_PI;
+    delta = a2 - a1;
+  }
+
+  // busur
+  stroke(255,0,0);
+  strokeWeight(4);
+  noFill();
+  arc(pusat.x, pusat.y, 2*r, 2*r, a1, a1 + delta);
+
+  // pusat O
+  noStroke();
+  fill(255,0,0);
+  ellipse(pusat.x, pusat.y, 10, 10);
+
+  // titik ujung busur
+  fill(0,100,255);
+  ellipse(ujung1.x, ujung1.y, 12,12);
+  ellipse(ujung2.x, ujung2.y, 12,12);
+
+  // label titik
+  fill(0);
+  text("A", ujung1.x + 10, ujung1.y - 10);
+  text("B", ujung2.x + 10, ujung2.y - 10);
+}
+
+// ======================
+// interaksi mouse
+// ======================
+function mousePressed() {
+  if (dist(mouseX, mouseY, ujung1.x, ujung1.y) < 10) {
+    dragging = true; draggedPoint = 1;
+  } else if (dist(mouseX, mouseY, ujung2.x, ujung2.y) < 10) {
+    dragging = true; draggedPoint = 2;
+  }
+}
+
+function mouseDragged() {
+  if (dragging) {
+    let v = createVector(mouseX - pusat.x, mouseY - pusat.y);
+    if (v.mag() < 1) v.set(1,0);
+    v.normalize().mult(r);
+
+    if (draggedPoint === 1) {
+      ujung1.set(pusat.x + v.x, pusat.y + v.y);
+    } else if (draggedPoint === 2) {
+      ujung2.set(pusat.x + v.x, pusat.y + v.y);
+    }
+  }
+}
+
+function mouseReleased() {
+  dragging = false;
+  draggedPoint = null;
+}
+</script>
+
+</body>
+</html>
