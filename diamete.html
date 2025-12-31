@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <title>Diameter Lingkaran</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+
+  <style>
+    html, body {
+      margin: 0;
+      background: transparent !important;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: transparent !important;
+    }
+  </style>
+</head>
+
+<body>
+
+<script>
+// ======================
+// Variabel global
+// ======================
+let pusat;
+let r;
+
+let titikA, titikB;
+let draggingA = false;
+let draggingB = false;  // Tambahan untuk drag titik B
+
+// ======================
+// setup
+// ======================
+function setup() {
+  createCanvas(1200, 700);
+
+  // UKURAN DISAMAKAN DENGAN CODING TALI BUSUR
+  r = min(width, height) * 0.285;
+
+  pusat = createVector(width / 2, height / 2);
+
+  // Titik awal diameter
+  titikA = createVector(pusat.x + r, pusat.y);
+  titikB = createVector(pusat.x - r, pusat.y);
+
+  textFont('system-ui', 14);
+}
+
+// ======================
+// draw
+// ======================
+function draw() {
+  clear();
+
+  // LINGKARAN
+  noFill();
+  stroke(0, 150, 255);
+  strokeWeight(2);
+  ellipse(pusat.x, pusat.y, 2 * r, 2 * r);
+
+  // DIAMETER
+  stroke(100);
+  strokeWeight(3);
+  line(titikA.x, titikA.y, titikB.x, titikB.y);
+
+  // TITIK A
+  fill(0, 100, 255);
+  noStroke();
+  ellipse(titikA.x, titikA.y, 12, 12);
+  fill(0);
+  textSize(15);
+  text("A", titikA.x + 10, titikA.y - 10);
+
+  // TITIK B
+  fill(0, 100, 255);
+  ellipse(titikB.x, titikB.y, 12, 12);
+  fill(0);
+  textSize(15);
+  text("B", titikB.x + 10, titikB.y - 10);
+
+  // PUSAT O
+  fill(255, 0, 0);
+  ellipse(pusat.x, pusat.y, 10, 10);
+  fill(0);
+  textSize(13);
+  text("Pusat (O)", pusat.x + 12, pusat.y - 8);
+}
+
+// ======================
+// Event Mouse
+// ======================
+function mousePressed() {
+  if (dist(mouseX, mouseY, titikA.x, titikA.y) < 10) {
+    draggingA = true;
+  } else if (dist(mouseX, mouseY, titikB.x, titikB.y) < 10) {  // Tambahan untuk mendeteksi drag titik B
+    draggingB = true;
+  }
+}
+
+function mouseDragged() {
+  if (draggingA) {
+    // Gerakkan A ke posisi mouse
+    titikA.set(mouseX, mouseY);
+
+    // Proyeksi A ke lingkaran
+    projectToCircle(titikA);
+
+    // B selalu berlawanan arah (diameter sejati)
+    let v = createVector(titikA.x - pusat.x, titikA.y - pusat.y);
+    titikB.set(pusat.x - v.x, pusat.y - v.y);
+  } else if (draggingB) {  // Tambahan logika untuk drag titik B
+    // Gerakkan B ke posisi mouse
+    titikB.set(mouseX, mouseY);
+
+    // Proyeksi B ke lingkaran
+    projectToCircle(titikB);
+
+    // A selalu berlawanan arah (diameter sejati)
+    let v = createVector(titikB.x - pusat.x, titikB.y - pusat.y);
+    titikA.set(pusat.x - v.x, pusat.y - v.y);
+  }
+}
+
+function mouseReleased() {
+  draggingA = false;
+  draggingB = false;  // Reset kedua flag
+}
+
+// ======================
+// Helper
+// ======================
+function projectToCircle(v) {
+  let d = createVector(v.x - pusat.x, v.y - pusat.y);
+  if (d.mag() === 0) d.set(1, 0);
+  d.normalize().mult(r);
+  v.set(pusat.x + d.x, pusat.y + d.y);
+}
+</script>
+
+</body>
+</html>
