@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Luas Lingkaran dengan Pengisian Bertahap</title>
+    <style>
+        html, body {
+            margin: 0;
+            background: transparent;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            background: transparent;
+        }
+    </style>
+</head>
+<body>
+
+<canvas id="myCanvas" width="1200" height="700"></canvas>
+
+<script>
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+
+// ======================
+// UKURAN DISAMAKAN DENGAN YANG LAIN
+// ======================
+const centerX = canvas.width / 2;
+const centerY = canvas.height / 2;
+const radius = Math.min(canvas.width, canvas.height) * 0.285;
+
+// Variabel animasi
+let angle = 0;
+const speed = 0.02; // Kecepatan pengisian (sesuaikan jika terlalu cepat/lambat)
+
+function draw() {
+    // Transparan penuh
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Keliling lingkaran (outline)
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.strokeStyle = 'blue';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Pengisian bertahap untuk menunjukkan luas (sektor dari pusat)
+    if (angle > 0) {
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY); // Mulai dari pusat
+        ctx.arc(centerX, centerY, radius, 0, angle); // Gambar arc hingga sudut saat ini
+        ctx.closePath(); // Tutup path ke pusat
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)'; // Warna merah transparan untuk pengisian
+        ctx.fill();
+    }
+
+    // Titik di ujung pengisian (seperti titik bergerak di keliling, tapi di sini menunjukkan progress)
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+    ctx.beginPath();
+    ctx.arc(x, y, 8, 0, 2 * Math.PI);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+
+    // Tingkatkan sudut
+    angle += speed;
+
+    // Jika sudah satu putaran penuh, reset untuk loop
+    if (angle >= 2 * Math.PI) {
+        angle = 0; // Reset untuk animasi berulang
+    }
+
+    requestAnimationFrame(draw);
+}
+
+// Mulai animasi
+draw();
+</script>
+
+</body>
+</html>
