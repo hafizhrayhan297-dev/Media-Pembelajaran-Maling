@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Juring Lingkaran</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+  <style>
+    body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial; margin: 8px; background: transparent; }
+    canvas { display:block; margin-top:8px; background: transparent; }
+  </style>
+</head>
+<body>
+
+<script>
+// ======================
+// Global vars
+// ======================
+let pusat;
+let r;
+
+// titik-titik
+let ujung1, ujung2;
+
+// dragging state
+let dragging = false;
+let draggedPoint = null;
+
+// ======================
+// setup
+// ======================
+function setup() {
+  createCanvas(1200, 700);                 // ⬅️ ukuran canvas diperbesar
+
+  pusat = createVector(width/2, height/2);
+  r = min(width, height) * 0.285;          // ⬅️ radius disamakan
+
+  resetUjung();
+  textFont('system-ui', 14);
+}
+
+// reset titik awal
+function resetUjung() {
+  ujung1 = createVector(pusat.x + r, pusat.y);
+  ujung2 = createVector(pusat.x - r, pusat.y);
+  projectAllToCircle();
+  clearDragFlags();
+}
+
+function projectAllToCircle() {
+  [ujung1, ujung2].forEach(v => { if (v) projectToCircle(v); });
+}
+function projectToCircle(v) {
+  let vv = createVector(v.x - pusat.x, v.y - pusat.y);
+  if (vv.mag() === 0) vv.set(1,0);
+  vv.normalize().mult(r);
+  v.x = pusat.x + vv.x;
+  v.y = pusat.y + vv.y;
+}
+function clearDragFlags() {
+  dragging = false; draggedPoint = null;
+}
+
+// ======================
+// draw loop
+// ======================
+function draw() {
+  clear();
+
+  // Pusat lingkaran (O)
+  noStroke();
+  fill(255,0,0);
+  ellipse(pusat.x, pusat.y, 10, 10);
+  fill(0); textSize(13);
+  text("O", pusat.x + 12, pusat.y - 8);
+
+  // Bayangan lingkaran
+  noFill();
+  stroke(0,150,255);
+  strokeWeight(2);
+  ellipse(pusat.x, pusat.y, 2*r, 2*r);
+
+  // Juring (sektor)
+  let A = atan2(ujung1.y - pusat.y, ujung1.x - pusat.x);
+  let B = atan2(ujung2.y - pusat.y, ujung2.x - pusat.x);
+  let delta = abs(B - A);
+  if (delta > PI) delta = TWO_PI - delta;
+
+  let a = (A + TWO_PI) % TWO_PI;
+  let b = (B + TWO_PI) % TWO_PI;
+  let diff = b - a; if (diff < 0) diff += TWO_PI;
+  let start = (diff <= PI) ? a : b;
+  let startAngle = start;
+  let endAngle = start + delta;
+
+  // Area juring
+  fill(255,165,0,150);
+  noStroke();
+  beginShape();
+  vertex(pusat.x, pusat.y);
+  for (let t = startAngle; t <= endAngle + 0.0001; t += 0.01) {
+    vertex(pusat.x + r * cos(t), pusat.y + r * sin(t));
+  }
+  endShape(CLOSE);
+
+  // Outline busur
+  noFill();
+  stroke(255,165,0);
+  strokeWeight(4);
+  arc(pusat.x, pusat.y, 2*r, 2*r, startAngle, endAngle);
+
+  // Jari-jari
+  stroke(80);
+  strokeWeight(2);
+  line(pusat.x, pusat.y, ujung1.x, ujung1.y);
+  line(pusat.x, pusat.y, ujung2.x, ujung2.y);
+
+  // Titik A dan B
+  noStroke();
+  fill(0,100,255);
+  ellipse(ujung1.x, ujung1.y, 12,12);
+  ellipse(ujung2.x, ujung2.y, 12,12);
+  fill(0); textSize(12);
+  text("A", ujung1.x + 10, ujung1.y - 8);
+  text("B", ujung2.x + 10, ujung2.y - 8);
+}
+
+// ======================
+// Mouse events
+// ======================
+function mousePressed() {
+  if (dist(mouseX, mouseY, ujung1.x, ujung1.y) < 10) {
+    dragging = true; draggedPoint = 1;
+  } else if (dist(mouseX, mouseY, ujung2.x, ujung2.y) < 10) {
+    dragging = true; draggedPoint = 2;
+  }
+}
+
+function mouseDragged() {
+  if (dragging && draggedPoint !== null) {
+    let v = createVector(mouseX - pusat.x, mouseY - pusat.y);
+    if (v.mag() < 1) v.set(1,0);
+    v.normalize().mult(r);
+
+    if (draggedPoint === 1) {
+      ujung1.x = pusat.x + v.x;
+      ujung1.y = pusat.y + v.y;
+    } else if (draggedPoint === 2) {
+      ujung2.x = pusat.x + v.x;
+      ujung2.y = pusat.y + v.y;
+    }
+  }
+}
+
+function mouseReleased() {
+  dragging = false;
+  draggedPoint = null;
+}
+</script>
+</body>
+</html>
