@@ -1,0 +1,167 @@
+<think>
+Pertama, pengguna meminta "tolong langsung ubah ke codingannya saja", yang berarti mereka ingin saya langsung memberikan kode yang sudah diubah, tanpa penjelasan tambahan.
+
+
+## Addressing User Request  
+- The user asked for the code to be directly converted without additional explanations.
+</think>```html
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<!-- Hapus atau komentari baris ini jika ingin ukuran fixed (tidak responsif), agar lebih besar di Genially -->
+<!-- <meta name="viewport" content="width=device-width, initial-scale=1"> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.min.js"></script>
+
+<style>
+  body {
+    margin: 0;
+    background: transparent !important;
+  }
+  canvas {
+    display: block;
+    background: transparent !important;
+  }
+</style>
+
+</head>
+<body>
+
+<script>
+let pusat;
+let r = 200;
+
+let ujungC, ujungD;
+let draggingPoint = null;
+let draggingLine = false;
+let offset;
+
+function setup() {
+  createCanvas(1200, 700);
+  pusat = createVector(width/2, height/2);
+
+  resetChord();
+}
+
+function resetChord() {
+  ujungC = createVector(pusat.x + r * 0.7, pusat.y - r * 0.4);
+  ujungD = createVector(pusat.x - r * 0.7, pusat.y + r * 0.4);
+  projectToCircle(ujungC);
+  projectToCircle(ujungD);
+}
+
+function projectToCircle(v) {
+  let d = createVector(v.x - pusat.x, v.y - pusat.y);
+  if (d.mag() === 0) d.set(1,0);
+  d.normalize().mult(r);
+  v.x = pusat.x + d.x;
+  v.y = pusat.y + d.y;
+}
+
+function draw() {
+  clear(); // transparan
+
+  // LINGKARAN
+  noFill();
+  stroke(0,150,255,180);
+  strokeWeight(2);
+  ellipse(pusat.x, pusat.y, 2*r, 2*r);
+
+  // CHORD
+  stroke(80);
+  strokeWeight(3);
+  line(ujungC.x, ujungC.y, ujungD.x, ujungD.y);
+
+  // TITIK C
+  fill(0,100,255);
+  noStroke();
+  ellipse(ujungC.x, ujungC.y, 14,14);
+  
+  // Label C
+  fill(0);
+  textSize(16);
+  text("C", ujungC.x + 10, ujungC.y - 10);
+
+  // TITIK D
+  fill(0,100,255);
+  ellipse(ujungD.x, ujungD.y, 14,14);
+  
+  // Label D
+  fill(0);
+  textSize(16);
+  text("D", ujungD.x + 10, ujungD.y - 10);
+
+  // TITIK PUSAT O
+  fill(255,0,0);
+  ellipse(pusat.x, pusat.y, 14,14);
+
+  // Label O
+  fill(0);
+  textSize(16);
+  text("Pusat (O)", pusat.x + 10, pusat.y - 10);
+}
+
+function mousePressed() {
+  if (dist(mouseX, mouseY, ujungC.x, ujungC.y) < 12) {
+    draggingPoint = "C";
+    return;
+  }
+  if (dist(mouseX, mouseY, ujungD.x, ujungD.y) < 12) {
+    draggingPoint = "D";
+    return;
+  }
+
+  let d = distToLine(mouseX, mouseY, ujungC.x, ujungC.y, ujungD.x, ujungD.y);
+  if (d < 10) {
+    draggingLine = true;
+    offset = createVector(mouseX, mouseY);
+  }
+}
+
+function mouseDragged() {
+  if (draggingPoint === "C") {
+    ujungC.x = mouseX;
+    ujungC.y = mouseY;
+    projectToCircle(ujungC);
+  }
+  else if (draggingPoint === "D") {
+    ujungD.x = mouseX;
+    ujungD.y = mouseY;
+    projectToCircle(ujungD);
+  }
+  else if (draggingLine) {
+    let dx = mouseX - offset.x;
+    let dy = mouseY - offset.y;
+
+    ujungC.x += dx; ujungC.y += dy;
+    ujungD.x += dx; ujungD.y += dy;
+
+    projectToCircle(ujungC);
+    projectToCircle(ujungD);
+
+    offset.set(mouseX, mouseY);
+  }
+}
+
+function mouseReleased() {
+  draggingPoint = null;
+  draggingLine = false;
+}
+
+function distToLine(px, py, x1, y1, x2, y2) {
+  let A = px - x1;
+  let B = py - y1;
+  let C = x2 - x1;
+  let D = y2 - y1;
+  let dot = A * C + B * D;
+  let len = C * C + D * D;
+  let t = dot / len;
+  let X = x1 + C * t;
+  let Y = y1 + D * t;
+  return dist(px, py, X, Y);
+}
+</script>
+
+</body>
+</html>
+```
